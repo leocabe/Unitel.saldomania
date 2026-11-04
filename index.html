@@ -1,28 +1,6 @@
 <!doctype html>
 <html lang="pt">
 <head>
-    <!-- Utimfy Pixel Code -->
-
-<script>
-  window.pixelId = "69f3308425c7d3cc4f8da0a2";
-  var a = document.createElement("script");
-  a.setAttribute("async", "");
-  a.setAttribute("defer", "");
-  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
-  document.head.appendChild(a);
-</script>
-
-  <!-- End Utimfy Pixel Code -->
-
-  <!-- UTMIFY SCRIPT -->
-  <script
-    src="https://cdn.utmify.com.br/scripts/utms/latest.js"
-    data-utmify-prevent-xcod-sck
-    data-utmify-prevent-subids
-    async
-    defer
-  ></script>
-  <!-- END UTMIFY -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Roleta de prémios</title>
@@ -227,6 +205,26 @@ header { border-bottom: 1px solid var(--line); margin-bottom: 18px; }
   #wheelTitle { order: 4; flex-basis: 100%; font-size: 17px; padding: 4px 0 0; }
 }
 </style>
+  <!-- Utimfy Pixel Code -->
+  <script>
+    window.pixelId = "69f3308425c7d3cc4f8da0a2";
+    var a = document.createElement("script");
+    a.setAttribute("async", "");
+    a.setAttribute("defer", "");
+    a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+    document.head.appendChild(a);
+  </script>
+  <!-- End Utimfy Pixel Code -->
+
+  <!-- UTMIFY SCRIPT -->
+  <script
+    src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+    data-utmify-prevent-xcod-sck
+    data-utmify-prevent-subids
+    async
+    defer
+  ></script>
+  <!-- END UTMIFY -->
 </head>
 <body>
 <header>
@@ -587,7 +585,7 @@ header { border-bottom: 1px solid var(--line); margin-bottom: 18px; }
     if (!slices.length) { toast('Adiciona pelo menos um nome.'); return; }
     if (audio && audio.state === 'suspended') audio.resume();
     const winning = attempts + 1 === 4;
-    const outcome = winning ? PRODUCTS[Math.floor(rand() * PRODUCTS.length)] : 'Tenta novamente';
+    const outcome = winning ? 'iPhone 16' : 'Tenta novamente'; // o único prémio que pode ser ganho é o iPhone 16
     const candidates = slices.filter(slice => slice.entry.text === outcome);
     const win = candidates[Math.floor(rand() * candidates.length)];
     const margin = (win.end - win.start) * 0.08;
