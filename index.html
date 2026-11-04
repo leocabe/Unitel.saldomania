@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Roleta de prémios</title>
+<link rel="stylesheet" href="assets/participacao.css" />
+<style>
+:root {
+  --brand-orange: #f27114; --brand-orange-deep: #c7430f; --brand-purple: #5b257c;
+  --bg: #faf8fb; --panel: #ffffff; --ink: #2b1736; --muted: #776581; --line: #eadfed;
+  --accent: #5b257c; --accent-ink: #fff; --accent-soft: #f3eaf7; --danger: #c63535;
+  --shadow: 0 10px 30px #5b257c12, 0 2px 6px #5b257c0a;
+  color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #190f20; --panel: #281b30; --ink: #fff7fc; --muted: #c7b3ce; --line: #4b3555;
+    --accent: #ffad68; --accent-soft: #3e2545; --shadow: 0 10px 30px #0006; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #190f20; --panel: #281b30; --ink: #fff7fc; --muted: #c7b3ce; --line: #4b3555;
+  --accent: #ffad68; --accent-soft: #3e2545; --shadow: 0 10px 30px #0006; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+[hidden] { display: none !important; }
+
+header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; max-width: 1280px; margin: 0 auto; }
+.logo { display: block; width: 220px; height: auto; flex: none; object-fit: contain; background: #fff; border-radius: 10px; padding: 6px 10px; }
+#wheelTitle { flex: 1; min-width: 0; border: 1px solid transparent; background: transparent; font-size: 20px; font-weight: 700; padding: 6px 8px; border-radius: 8px; }
+#wheelTitle:hover, #wheelTitle:focus { border-color: var(--line); background: var(--panel); outline: none; }
+.icon-btn { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 8px 12px; font-size: 14px; white-space: nowrap; }
+.icon-btn:hover { border-color: var(--accent); }
+
+main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .9fr); gap: 20px; max-width: 1280px; margin: 0 auto; padding: 0 20px 40px; }
+@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); padding: 0 16px 32px; } header { padding: 12px 16px; } }
+
+.stage { background: var(--panel); border-radius: 20px; box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.wheel-wrap { position: relative; width: 100%; max-width: 640px; aspect-ratio: 1; }
+#wheel { width: 100%; height: 100%; display: block; cursor: pointer; touch-action: manipulation; }
+.pointer { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 34px solid var(--ink); filter: drop-shadow(0 3px 3px #0004); pointer-events: none; z-index: 2; }
+.hub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 19%; aspect-ratio: 1; border-radius: 50%; border: 5px solid #fff; background: var(--brand-purple); color: #fff; font-weight: 800; font-size: clamp(12px, 2.4vw, 18px); letter-spacing: .06em; box-shadow: 0 4px 14px #0004; }
+.hub:hover:not(:disabled) { filter: brightness(1.1); }
+.spin-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.primary { background: var(--brand-orange-deep); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 13px 28px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 16px #e04a1130; }
+.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.hint { color: var(--muted); font-size: 13px; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; font-size: 12px; background: var(--bg); }
+
+.side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.card { background: var(--panel); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px 0; }
+.card-head h2 { margin: 0; font-size: 16px; }
+.badge { background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; padding: 3px 9px; border-radius: 999px; }
+.tabs { display: flex; gap: 2px; padding: 10px 10px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { border: 0; background: none; padding: 9px 12px; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.panel { padding: 14px 16px 16px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.toolbar button { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.toolbar button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+#entriesText { width: 100%; min-height: 300px; resize: vertical; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--bg); line-height: 1.55; font-size: 15px; }
+#entriesText:focus, .row input:focus, .field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.list { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.row { display: grid; grid-template-columns: 14px 1fr 58px 30px 30px; gap: 6px; align-items: center; }
+.row .dot { width: 14px; height: 14px; border-radius: 50%; }
+.row input { min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 6px 8px; font-size: 14px; }
+.row.off input[type=text] { text-decoration: line-through; color: var(--muted); }
+.row button { border: 0; background: none; padding: 4px; border-radius: 6px; color: var(--muted); font-size: 15px; }
+.row button:hover { background: var(--bg); color: var(--ink); }
+.list-head { display: grid; grid-template-columns: 14px 1fr 58px 30px 30px; gap: 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.add-row { display: flex; gap: 6px; margin-top: 10px; }
+.add-row input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+.add-row button { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+.help { color: var(--muted); font-size: 12.5px; margin: 8px 0 0; line-height: 1.5; }
+code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.field:last-child { border-bottom: 0; }
+.field label { font-size: 14px; }
+.field small { display: block; color: var(--muted); font-size: 12px; }
+.field input[type=range] { width: 150px; accent-color: var(--accent); }
+.field select { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 6px 8px; }
+.switch { appearance: none; width: 40px; height: 23px; border-radius: 999px; background: var(--line); position: relative; flex: none; cursor: pointer; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px #0003; }
+.switch:checked { background: var(--accent); }
+.switch:checked::after { transform: translateX(17px); }
+.palettes { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 6px; }
+.pal { border: 2px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px; text-align: left; font-size: 13px; }
+.pal[aria-pressed="true"] { border-color: var(--accent); }
+.pal .sw { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.pal .sw span { flex: 1; }
+
+#results { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow-y: auto; }
+#results li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+#results li:last-child { border-bottom: 0; }
+#results .n { color: var(--muted); font-size: 12px; width: 26px; flex: none; }
+#results .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+#results time { color: var(--muted); font-size: 12px; }
+.empty { color: var(--muted); font-size: 14px; padding: 6px 0; }
+
+.modal-bg { position: fixed; inset: 0; background: #0008; display: grid; place-items: center; z-index: 50; padding: 16px; animation: fade .2s ease-out; }
+.modal { background: var(--panel); border-radius: 22px; padding: 28px 24px 22px; width: min(440px, 100%); text-align: center; box-shadow: 0 30px 60px #0005; animation: pop .35s cubic-bezier(.2, 1.4, .4, 1); }
+.modal small { color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; }
+.modal h3 { font-size: clamp(26px, 6vw, 40px); margin: 10px 0 20px; word-break: break-word; }
+.modal .actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.modal .actions button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 16px; font-weight: 600; }
+.modal .actions .primary { border: 0; background: var(--brand-orange-deep); }
+.modal .actions .danger { color: var(--danger); }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; width: 100%; height: 100%; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 70; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { transform: scale(.7); opacity: 0; } }
+.side > .card:first-child, .side > .card:last-child, #clearResBtn { display: none; }
+.prize-image { display: block; width: min(280px, 100%); height: 200px; object-fit: contain; margin: 20px auto; }
+#attemptStatus { text-align: center; font-weight: 700; margin: 0; background: var(--accent-soft); padding: 10px 18px; border-radius: 999px; font-size: 14px; }
+.prize-note { margin: 0; color: var(--muted); font-size: 13px; text-align: center; }
+.hint { text-align: center; }
+.stage { min-width: 0; padding: clamp(12px, 3vw, 28px); }
+.wheel-wrap { filter: drop-shadow(0 8px 16px #5b257c20); }
+.prize-image { background: white; border-radius: 18px; padding: 16px; }
+@media (max-width: 420px) { .hub { border-width: 3px; } .pointer { border-left-width: 12px; border-right-width: 12px; border-top-width: 25px; } .hint { font-size: 11px; } }
+/* Result cards share the orange and purple palette and adapt to short screens. */
+.modal-bg { background: #210d2d99; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow-y: auto; }
+.result-modal { position: relative; width: min(460px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 30px 26px 22px; border: 1px solid var(--line); background: linear-gradient(160deg, var(--accent-soft), var(--panel) 35%); box-shadow: 0 24px 90px #30113f60; }
+.result-close { position: absolute; right: 12px; top: 12px; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--muted); font-size: 22px; line-height: 1; }
+.result-eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 800; padding: 8px 18px 0; }
+.result-symbol { width: 54px; height: 54px; display: grid; place-items: center; margin: 18px auto 12px; border-radius: 18px; background: var(--brand-purple); box-shadow: 0 7px 20px #5b257c2b; color: #fff; font-size: 32px; }
+.result-win .result-symbol { background: #fff0e2; color: #a53b0e; box-shadow: 0 7px 20px #f2711420; }
+.result-modal h3 { font-size: clamp(24px, 5.8vw, 32px); line-height: 1.16; letter-spacing: -.035em; margin: 8px 0 10px; }
+.result-subtitle { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; }
+.prize-showcase { margin: 18px 0 16px; padding: 16px 12px 12px; border: 1px solid #f1e2ed; border-radius: 20px; background: #fff; }
+.prize-showcase .prize-image { width: 100%; height: clamp(120px, 21vh, 175px); padding: 0; margin: 0 auto 10px; border-radius: 0; }
+.prize-caption { color: #725d7d; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+.result-description { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 18px 0; }
+.product-features { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: -4px 0 18px; }
+.product-features span { font-size: 10px; font-weight: 650; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 6px 9px; }
+.attempt-card { border: 1px solid var(--line); border-radius: 15px; padding: 14px 16px; background: var(--panel); text-align: left; margin: 18px 0; }
+.attempt-card-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+.attempt-card-heading strong { font-size: 17px; color: var(--ink); }
+.attempt-track { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; margin: 12px 0 8px; }
+.attempt-track span { height: 6px; border-radius: 4px; background: var(--accent); }
+.attempt-track .used { background: var(--line); }
+.attempt-caption { font-size: 10px; color: var(--muted); }
+.result-modal .actions .primary { width: 100%; padding: 14px 18px; border-radius: 13px; font-size: 14px; color: #fff; background: linear-gradient(110deg, #c7430f, #a9320a); }
+.result-footer { margin: 14px 0 0; font-size: 10px; line-height: 1.5; color: var(--muted); }
+.result-modal button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 420px) { .result-modal { padding: 26px 20px 20px; } .result-eyebrow { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .modal-bg, .result-modal { animation: none; } }
+.winners-intro { margin: 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.winners-demo { font-size: 10px; padding: 5px 9px; }
+#results { max-height: none; overflow: visible; display: grid; gap: 12px; }
+#results .winner-row { border: 1px solid var(--line); border-radius: 18px; padding: 16px 12px; gap: 13px; background: var(--bg); animation: winner-arrive .4s ease-out; }
+#results .winner-row:first-child { border-color: var(--accent); background: var(--accent-soft); }
+.winner-avatar { width: 56px; height: 56px; flex: none; position: relative; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 22px; }
+.winner-avatar::before { content: attr(data-initial); position: absolute; }
+.winner-avatar img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid var(--panel); position: relative; }
+.winner-avatar > span { position: absolute; right: -2px; bottom: -2px; background: #ffedb0; color: #896000; width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid var(--panel); border-radius: 50%; font-size: 13px; }
+.winner-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.winner-copy strong { font-size: 15px; color: var(--ink); }
+.winner-copy > span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.winner-copy b { color: var(--accent); font-weight: 750; }
+.winner-copy small { font-size: 10px; color: var(--muted); }
+.winner-product { width: 62px; height: 62px; flex: none; background: white; border-radius: 14px; display: grid; place-items: center; padding: 7px; }
+.winner-product img { width: 100%; height: 100%; object-fit: contain; }
+.winners-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 18px 0 12px; color: var(--muted); font-size: 11px; }
+.winners-bottom button { background: var(--panel); border: 1px solid var(--line); padding: 7px 12px; border-radius: 8px; font-size: 11px; }
+.winners-disclaimer { font-size: 11px; line-height: 1.65; color: var(--muted); margin: 0; padding-top: 12px; border-top: 1px solid var(--line); }
+@keyframes winner-arrive { from { opacity: .5; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 360px) { #results .winner-row { gap: 9px; padding: 12px 9px; } .winner-product { width: 48px; height: 48px; } .winner-avatar, .winner-avatar img { width: 46px; height: 46px; } .winner-copy > span { font-size: 12px; } }
+@media (prefers-reduced-motion: reduce) { #results .winner-row { animation: none; } }
+#results { display: flex; flex-direction: column; gap: 0; max-height: 430px; overflow-y: auto; overscroll-behavior: contain; overflow-anchor: none; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+#results .winner-row, #results .winner-row:first-child { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 16px 0; gap: 10px; align-items: flex-start; animation: none; flex-shrink: 0; }
+#results .winner-row.is-new { animation: comment-arrive .4s ease-out; }
+#results .winner-row:last-child { border-bottom: 0; }
+#results .winner-avatar, #results .winner-avatar img { width: 44px; height: 44px; }
+#results .winner-product { width: 45px; height: 45px; padding: 5px; border: 1px solid var(--line); border-radius: 12px; }
+.feed-message-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.feed-message-head strong { font-size: 13px; }
+#results .feed-message-head time { white-space: nowrap; font-size: 9px; }
+.feed-message-text { margin: 3px 0 5px; font-size: 13px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+.winner-copy > .feed-prize { font-size: 10px; color: var(--accent); line-height: 1.5; }
+.feed-indicator { display: flex; align-items: center; gap: 7px; font-size: 10px; }
+.feed-indicator i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-orange); box-shadow: 0 0 0 3px #f271141c; flex: none; }
+.feed-paused .feed-indicator i { background: var(--muted); box-shadow: none; }
+@keyframes comment-arrive { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { #results .winner-row.is-new { animation: none; } }
+.winner-avatar .soft-portrait { filter: blur(.75px); }
+.feed-message-head strong { overflow-wrap: anywhere; }
+header { border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.primary { background: linear-gradient(110deg, #c7430f, #a9320a); }
+.primary:hover:not(:disabled) { box-shadow: 0 8px 22px #e04a1140; }
+.stage { border-top: 4px solid var(--brand-orange); }
+.side > .card:nth-child(2) { border-top: 4px solid var(--brand-purple); }
+#attemptStatus { background: var(--accent-soft); color: var(--accent); }
+@media (max-width: 600px) {
+  header { flex-wrap: wrap; gap: 10px; }
+  header .logo { width: 210px; max-width: calc(100% - 104px); margin-right: auto; }
+  #wheelTitle { order: 4; flex-basis: 100%; font-size: 17px; padding: 4px 0 0; }
+}
+</style>
+</head>
+<body>
+<header>
+  <img class="logo" src="assets/unitel-logo.png" alt="Unitel — Olá Mundo" width="329" height="68" />
+  <input readonly id="wheelTitle" value="A minha roleta" aria-label="Título da roleta" maxlength="80" />
+  <button class="icon-btn" id="themeBtn" title="Alternar tema">◐</button>
+  <button class="icon-btn" id="fullBtn" title="Ecrã inteiro">⛶</button>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="wheel-wrap" id="wheelWrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" aria-label="Roleta com iPhone 16, MacBook Pro, motorizada Lingken e fatias sem prémio"></canvas>
+      <button class="hub" id="hubBtn" aria-label="Girar">GIRAR</button>
+    </div>
+    <div class="spin-row">
+      <button class="primary" id="spinBtn">Girar a roleta</button>
+    </div>
+    <p id="attemptStatus" role="status" aria-live="polite"></p>
+    <div class="hint">Clica na roleta ou carrega em <kbd>Espaço</kbd> para girar</div>
+    <p class="prize-note">Prémios disponíveis: iPhone 16 e MacBook Pro.</p>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <div class="card-head"><h2>Nomes</h2><span class="badge" id="countBadge">Fatias (0)</span></div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="text" aria-selected="true">Texto</button>
+        <button class="tab" role="tab" data-tab="list" aria-selected="false">Lista</button>
+        <button class="tab" role="tab" data-tab="style" aria-selected="false">Estilo</button>
+        <button class="tab" role="tab" data-tab="sound" aria-selected="false">Som</button>
+        <button class="tab" role="tab" data-tab="timing" aria-selected="false">Tempo</button>
+      </div>
+
+      <div class="panel" data-panel="text">
+        <div class="toolbar">
+          <button id="shuffleBtn">🔀 Baralhar</button>
+          <button id="sortBtn">🔤 Ordenar</button>
+          <button id="importBtn">📄 Importar CSV/TXT</button>
+          <button id="clearBtn">🗑 Limpar</button>
+        </div>
+        <textarea id="entriesText" spellcheck="false" aria-label="Um nome por linha"></textarea>
+        <p class="help">Um nome por linha. Peso: <code>3, Pizza</code> (3× mais provável). Ocultar uma fatia: começa a linha com <code>//</code>. Máximo de 1100 fatias.</p>
+      </div>
+
+      <div class="panel" data-panel="list" hidden>
+        <div class="toolbar">
+          <button id="showAllBtn">👁 Mostrar todas</button>
+          <button id="resetWeightsBtn">⚖ Pesos iguais</button>
+        </div>
+        <div class="list-head"><span></span><span>Nome</span><span>Peso</span><span></span><span></span></div>
+        <div class="list" id="list"></div>
+        <form class="add-row" id="addForm">
+          <input id="addInput" placeholder="Adicionar nome…" maxlength="200" />
+          <button>Adicionar</button>
+        </form>
+      </div>
+
+      <div class="panel" data-panel="style" hidden>
+        <div class="palettes" id="palettes"></div>
+        <div class="field"><label>Mostrar percentagem<small>Probabilidade em cada fatia</small></label><input type="checkbox" class="switch" id="optPercent" /></div>
+        <div class="field"><label>Contorno das fatias</label><input type="checkbox" class="switch" id="optBorder" /></div>
+        <div class="field"><label>Tamanho do texto</label><input type="range" id="optFont" min="0.6" max="1.6" step="0.05" /></div>
+      </div>
+
+      <div class="panel" data-panel="sound" hidden>
+        <div class="field"><label>Som de “tique” ao girar</label><input type="checkbox" class="switch" id="optTick" /></div>
+        <div class="field"><label>Som de vitória</label><input type="checkbox" class="switch" id="optWinSound" /></div>
+        <div class="field"><label>Volume</label><input type="range" id="optVolume" min="0" max="1" step="0.05" /></div>
+        <div class="field"><label>Confetti</label><input type="checkbox" class="switch" id="optConfetti" /></div>
+      </div>
+
+      <div class="panel" data-panel="timing" hidden>
+        <div class="field"><label>Duração do giro<small id="durLabel"></small></label><input type="range" id="optDuration" min="2" max="20" step="1" /></div>
+        <div class="field"><label>Modo eliminação<small>Oculta o vencedor automaticamente após cada giro</small></label><input type="checkbox" class="switch" id="optElim" /></div>
+        <div class="field"><label>Mostrar janela do vencedor</label><input type="checkbox" class="switch" id="optPopup" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Vencedores</h2><span class="badge winners-demo"></span><span id="resBadge" hidden></span></div>
+      <div class="panel">
+        <div class="toolbar">
+          <button id="copyResBtn" hidden>Copiar</button>
+          <button id="clearResBtn">🗑 Limpar</button>
+        </div>
+        <p class="winners-intro">As mensagens vão chegando, uma de cada vez.</p>
+        <ul id="results" aria-label="Mensagens simuladas de vencedores"></ul>
+        <div class="winners-bottom"><span class="feed-indicator"><i aria-hidden="true"></i><span id="feedStatus">A receber mensagens</span></span><button id="toggleWinners" type="button" aria-pressed="false">Pausar</button></div>
+        <p class="winners-disclaimer">Simulation</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Guardar e partilhar</h2></div>
+      <div class="panel">
+        <div class="toolbar" style="margin:0">
+          <button id="shareBtn">🔗 Copiar link</button>
+          <button id="exportBtn">⬇ Exportar JSON</button>
+          <button id="importJsonBtn">⬆ Importar JSON</button>
+        </div>
+        <p class="help">A roleta é guardada automaticamente neste navegador. O link contém a roleta completa.</p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<input type="file" id="fileInput" accept=".csv,.tsv,.txt,text/plain,text/csv" hidden />
+<input type="file" id="jsonInput" accept=".json,application/json" hidden />
+<canvas id="confetti"></canvas>
+
+<script src="assets/prizes.js"></script>
+<script src="assets/participacao.js"></script>
+<script>
+(() => {
+  const MAX_SLICES = 1100, MAX_FILE = 300 * 1024, STORE_KEY = 'roleta-v1';
+  const PALETTES = {
+    vivo:   { name: 'Laranja e roxo', colors: ['#5b257c', '#f27114', '#702f91', '#c7430f', '#50216d', '#ff9600', '#5b257c', '#f27114'] },
+    pastel: { name: 'Pastel', colors: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff'] },
+    oceano: { name: 'Oceano', colors: ['#03045e', '#0077b6', '#00b4d8', '#48cae4', '#023e8a', '#0096c7', '#90e0ef', '#005f73'] },
+    floresta: { name: 'Floresta', colors: ['#2d6a4f', '#40916c', '#95d5b2', '#1b4332', '#74c69d', '#b7e4c7', '#52b788', '#081c15'] },
+    neon:   { name: 'Neon',   colors: ['#f72585', '#7209b7', '#3a0ca3', '#4361ee', '#4cc9f0', '#b5179e', '#560bad', '#480ca8'] },
+    outono: { name: 'Outono', colors: ['#9b2226', '#ae2012', '#bb3e03', '#ca6702', '#ee9b00', '#e9d8a6', '#94d2bd', '#005f73'] },
+    mono:   { name: 'Mono',   colors: ['#222222', '#444444', '#666666', '#888888', '#aaaaaa', '#cccccc'] },
+  };
+  const TOTAL_SPINS = 10;
+  const PRODUCTS = ['iPhone 16', 'MacBook Pro'];
+  const PROGRESS_KEY = 'roleta-products-progress-v1';
+  let attempts = 0;
+  try {
+    const stored = JSON.parse(localStorage.getItem(PROGRESS_KEY));
+    if (Number.isInteger(stored) && stored >= 0 && stored <= TOTAL_SPINS) attempts = stored;
+  } catch {}
+  const DEFAULT = {
+    title: 'Roleta de prémios',
+    entries: ['iPhone 16', 'Motorizada', 'MacBook Pro', 'Tenta novamente', 'iPhone 16', 'Motorizada', 'MacBook Pro', 'Tenta novamente'].map(text => ({ text, weight: 1, hidden: false })),
+    results: [],
+    opts: { palette: 'vivo', percent: false, border: true, font: 1, tick: true, winSound: true, volume: 0.6, confetti: true, duration: 6, elim: false, popup: true },
+  };
+
+  const $ = id => document.getElementById(id);
+  const canvas = $('wheel'), ctx = canvas.getContext('2d');
+  let state = load();
+  state.entries = structuredClone(DEFAULT.entries);
+  state.title = DEFAULT.title;
+  state.opts.elim = false;
+  state.opts.popup = true;
+  let rotation = 0, spinning = false;
+  let participantReady = false;
+  const PRODUCT_DETAILS = window.RoletaPrizes;
+  const PRODUCT_ASSETS = {
+    ...Object.fromEntries(Object.entries(PRODUCT_DETAILS).map(([name, prize]) => [name, prize.image])),
+    Motorizada: 'assets/lingken-lk50-2b.jpg',
+  };
+  const productImages = {};
+  for (const [name, src] of Object.entries(PRODUCT_ASSETS)) {
+    const image = new Image();
+    productImages[name] = image;
+    image.onload = () => draw();
+    image.onerror = () => { image.failed = true; draw(); };
+    image.src = src;
+  }
+
+  // ---------- persistence ----------
+  function load() {
+    const fromHash = readHash();
+    if (fromHash) return fromHash;
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) return normalize(JSON.parse(raw));
+    } catch {}
+    return structuredClone(DEFAULT);
+  }
+  function normalize(s) {
+    const out = structuredClone(DEFAULT);
+    if (!s || typeof s !== 'object') return out;
+    if (typeof s.title === 'string') out.title = s.title.slice(0, 80);
+    if (Array.isArray(s.entries)) out.entries = s.entries.slice(0, MAX_SLICES).filter(e => e && typeof e.text === 'string' && e.text.trim())
+      .map(e => ({ text: e.text.slice(0, 200), weight: clampWeight(e.weight), hidden: !!e.hidden }));
+    if (Array.isArray(s.results)) out.results = s.results.filter(r => r && typeof r.text === 'string').slice(0, 500);
+    if (s.opts && typeof s.opts === 'object') Object.assign(out.opts, s.opts);
+    if (!PALETTES[out.opts.palette]) out.opts.palette = 'vivo';
+    return out;
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
+  }
+  function encodeState() {
+    const json = JSON.stringify({ title: state.title, entries: state.entries, opts: state.opts });
+    const bytes = new TextEncoder().encode(json);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function readHash() {
+    const m = location.hash.match(/^#w=(.+)$/);
+    if (!m) return null;
+    try {
+      const bin = atob(m[1].replace(/-/g, '+').replace(/_/g, '/'));
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      history.replaceState(null, '', location.pathname + location.search);
+      return normalize(JSON.parse(new TextDecoder().decode(bytes)));
+    } catch { return null; }
+  }
+
+  // ---------- entries text <-> model ----------
+  function clampWeight(w) { w = Number(w); return Number.isFinite(w) && w > 0 ? Math.min(w, 1000) : 1; }
+  function parseText(text) {
+    const out = [];
+    for (let line of text.split(/\r?\n/)) {
+      let hidden = false;
+      line = line.trim();
+      if (line.startsWith('//')) { hidden = true; line = line.slice(2).trim(); }
+      if (!line) continue;
+      let weight = 1;
+      const m = line.match(/^(\d+(?:[.]\d+)?)\s*,\s*(.+)$/);
+      if (m) { weight = clampWeight(m[1]); line = m[2].trim(); }
+      out.push({ text: line.slice(0, 200), weight, hidden });
+      if (out.length >= MAX_SLICES) break;
+    }
+    return out;
+  }
+  function serialize(entries) {
+    return entries.map(e => (e.hidden ? '// ' : '') + (e.weight !== 1 ? e.weight + ', ' : '') + e.text).join('\n');
+  }
+  const visible = () => state.entries.filter(e => !e.hidden);
+
+  // ---------- secure random ----------
+  function rand() {
+    const a = new Uint32Array(1);
+    crypto.getRandomValues(a);
+    return a[0] / 4294967296;
+  }
+
+  // ---------- drawing ----------
+  function sliceColors(n) {
+    const c = PALETTES[state.opts.palette].colors;
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(c[i % c.length]);
+    // avoid same colour on first/last neighbour
+    if (n > 1 && out[n - 1] === out[0]) out[n - 1] = c[1 % c.length];
+    return out;
+  }
+  function textColor(hex) {
+    const v = parseInt(hex.slice(1), 16), r = v >> 16, g = (v >> 8) & 255, b = v & 255;
+    const channels = [r, g, b].map(v => {
+      const c = v / 255;
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    return luminance > 0.22 ? '#25132d' : '#ffffff';
+  }
+  function layout() {
+    const vis = visible();
+    const total = vis.reduce((s, e) => s + e.weight, 0);
+    let acc = 0;
+    return vis.map(e => {
+      const start = acc / total * Math.PI * 2;
+      acc += e.weight;
+      return { entry: e, start, end: acc / total * Math.PI * 2, pct: e.weight / total * 100 };
+    });
+  }
+  function resize() {
+    const size = canvas.getBoundingClientRect().width;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(size * dpr);
+    canvas.height = Math.round(size * dpr);
+    draw();
+  }
+  function draw() {
+    const W = canvas.width, R = W / 2, r = R * 0.96;
+    ctx.clearRect(0, 0, W, W);
+    const slices = layout();
+    ctx.save();
+    ctx.translate(R, R);
+    // outer rim
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.995, 0, Math.PI * 2);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+    ctx.fill();
+    if (!slices.length) {
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#ccc'; ctx.fill();
+      ctx.fillStyle = '#555'; ctx.font = `600 ${W * 0.04}px system-ui`; ctx.textAlign = 'center';
+      ctx.fillText('Adiciona nomes', 0, -R * 0.3);
+      ctx.restore(); return;
+    }
+    const colors = PALETTES.vivo.colors;
+    const base = -Math.PI / 2 + rotation;
+    slices.forEach((s, i) => {
+      ctx.beginPath(); ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, base + s.start, base + s.end);
+      ctx.closePath();
+      ctx.fillStyle = colors[i]; ctx.fill();
+      if (state.opts.border && slices.length < 300) { ctx.strokeStyle = '#ffffffaa'; ctx.lineWidth = Math.max(1, W * 0.002); ctx.stroke(); }
+    });
+    // Each product sits inside a white medallion that fits within its slice.
+    slices.forEach((s, i) => {
+      const middle = base + (s.start + s.end) / 2;
+      const badgeRadius = r * 0.195;
+      const badgeY = -r * 0.59;
+      ctx.save();
+      ctx.rotate(middle + Math.PI / 2);
+      const image = productImages[s.entry.text];
+      if (image) {
+        ctx.save();
+        ctx.shadowColor = '#17102b25'; ctx.shadowBlur = W * 0.012;
+        ctx.shadowOffsetY = W * 0.004;
+        ctx.beginPath(); ctx.arc(0, badgeY, badgeRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.restore();
+        if (image.complete && image.naturalWidth > 0) {
+          const maxW = badgeRadius * 1.36, maxH = badgeRadius * 1.36;
+          const scale = Math.min(maxW / image.naturalWidth, maxH / image.naturalHeight);
+          const width = image.naturalWidth * scale, height = image.naturalHeight * scale;
+          ctx.drawImage(image, -width / 2, badgeY - height / 2, width, height);
+        } else {
+          ctx.fillStyle = '#5b257c';
+          ctx.font = `700 ${W * 0.023}px system-ui`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(s.entry.text, 0, badgeY, badgeRadius * 1.7);
+        }
+      } else {
+        ctx.fillStyle = textColor(colors[i]); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = `500 ${W * 0.085}px system-ui`;
+        ctx.fillText('↻', 0, badgeY);
+      }
+      ctx.fillStyle = textColor(colors[i]); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `750 ${W * (s.entry.text === 'Tenta novamente' ? 0.023 : 0.03)}px system-ui`;
+      ctx.fillText(s.entry.text, 0, -r * 0.865, r * 0.58);
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+
+  // ---------- sound ----------
+  let audio;
+  function beep(freq, dur, type = 'triangle', vol = 1) {
+    if (!state.opts.volume) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.25 * vol * state.opts.volume, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(audio.destination);
+      o.start(t); o.stop(t + dur);
+    } catch {}
+  }
+  function winFanfare() {
+    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.35, 'square', 0.6), i * 110));
+  }
+
+  // ---------- spinning ----------
+  const ease = t => 1 - Math.pow(1 - t, 4);
+  function spin() {
+    if (!participantReady || spinning || attempts >= TOTAL_SPINS || document.querySelector('.modal-bg')) return;
+    const slices = layout();
+    if (!slices.length) { toast('Adiciona pelo menos um nome.'); return; }
+    if (audio && audio.state === 'suspended') audio.resume();
+    const winning = attempts + 1 === 4;
+    const outcome = winning ? PRODUCTS[Math.floor(rand() * PRODUCTS.length)] : 'Tenta novamente';
+    const candidates = slices.filter(slice => slice.entry.text === outcome);
+    const win = candidates[Math.floor(rand() * candidates.length)];
+    const margin = (win.end - win.start) * 0.08;
+    const target = win.start + margin + rand() * (win.end - win.start - margin * 2);
+    // pointer (top) reads wheel angle (-rotation mod 2π)
+    const TAU = Math.PI * 2;
+    const from = rotation;
+    const delta = (((-target - from) % TAU) + TAU) % TAU;
+    const turns = Math.max(3, Math.round(state.opts.duration * 0.9));
+    const to = from + turns * TAU + delta;
+    const dur = state.opts.duration * 1000;
+    const t0 = performance.now();
+    let lastSlice = -1, lastTick = 0;
+    setSpinning(true);
+    const frame = now => {
+      const p = Math.min(1, (now - t0) / dur);
+      rotation = from + (to - from) * ease(p);
+      draw();
+      if (state.opts.tick) {
+        const a = ((-rotation % TAU) + TAU) % TAU;
+        const cur = slices.findIndex(s => a < s.end);
+        if (cur !== lastSlice) {
+          if (lastSlice !== -1 && now - lastTick > 35) { beep(1400, 0.03, 'square', 0.5); lastTick = now; }
+          lastSlice = cur;
+        }
+      }
+      if (p < 1) requestAnimationFrame(frame);
+      else { rotation = to % TAU; finish(win.entry); }
+    };
+    requestAnimationFrame(frame);
+  }
+  function setSpinning(v) {
+    spinning = v;
+    $('spinBtn').disabled = v || attempts >= TOTAL_SPINS; $('hubBtn').disabled = v || attempts >= TOTAL_SPINS;
+    $('attemptStatus').textContent = `${TOTAL_SPINS - attempts} de ${TOTAL_SPINS} giros disponíveis · ${attempts} realizados`;
+    $('spinBtn').textContent = attempts >= TOTAL_SPINS ? 'Giros esgotados' : 'Girar a roleta';
+    $('entriesText').readOnly = v;
+    document.querySelectorAll('#list input, #list button, #addForm button, .toolbar button').forEach(b => b.disabled = v);
+  }
+  function finish(entry) {
+    attempts += 1;
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(attempts)); } catch {}
+    const won = attempts === 4 && PRODUCTS.includes(entry.text);
+    state.results.unshift({ text: `Tentativa ${attempts}: ${won ? entry.text : 'Sem prémio'}`, at: Date.now() });
+    setSpinning(false);
+    renderResults(); save();
+    if (won) {
+      document.querySelector('.toast')?.remove();
+      clearTimeout(toastTimer);
+      if (state.opts.winSound) winFanfare();
+      if (state.opts.confetti) confetti();
+      showWinner(entry);
+    } else {
+      showResultModal();
+    }
+  }
+
+  // ---------- result modal ----------
+  function showWinner(entry) {
+    const prize = PRODUCT_DETAILS[entry.text];
+    if (!prize) return;
+    try {
+      localStorage.setItem('roleta-awarded-prize-v1', JSON.stringify({ id: prize.id, at: Date.now() }));
+    } catch {}
+    showResultModal(entry);
+  }
+
+  function receivePrize(prize) {
+    const destination = new URL('parabens.html', location.href);
+    destination.search = location.search;
+    destination.searchParams.set('premio', prize.id);
+    location.assign(destination.href);
+  }
+
+  function showResultModal(entry = null) {
+    const won = !!entry;
+    const remaining = TOTAL_SPINS - attempts;
+    const exhausted = remaining === 0;
+    const detail = won ? PRODUCT_DETAILS[entry.text] : null;
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal result-modal ${won ? 'result-win' : 'result-loss'}" role="dialog" aria-modal="true" aria-labelledby="winnerTitle" aria-describedby="resultDescription">
+      <button class="result-close" data-a="close" aria-label="Fechar janela">×</button>
+      <div class="result-eyebrow">${won ? 'Um momento para celebrar' : exhausted ? 'Participação concluída' : 'A próxima volta espera por ti'}</div>
+      <div class="result-symbol" aria-hidden="true">${won ? '✦' : exhausted ? '✓' : '↻'}</div>
+      <h3 id="winnerTitle"></h3>
+      <p class="result-subtitle"></p>
+      ${won ? '<div class="prize-showcase"><img class="prize-image" /><span class="prize-caption"></span></div>' : ''}
+      <p class="result-description" id="resultDescription"></p>
+      ${won ? '<div class="product-features"></div>' : ''}
+      <div class="attempt-card">
+        <div class="attempt-card-heading"><span>${exhausted ? 'Giros concluídos' : 'Ainda tens'}</span><strong>${exhausted ? `${TOTAL_SPINS} de ${TOTAL_SPINS}` : `${remaining} ${remaining === 1 ? 'tentativa' : 'tentativas'}`}</strong></div>
+        <div class="attempt-track" aria-hidden="true">${Array.from({length: TOTAL_SPINS}, (_, i) => `<span class="${i < attempts ? 'used' : ''}"></span>`).join('')}</div>
+        <span class="attempt-caption">${attempts} de ${TOTAL_SPINS} tentativas utilizadas</span>
+      </div>
+      <div class="actions"><button class="primary" data-a="${won ? 'receive' : 'close'}">${won ? 'Receber o meu prémio' : exhausted ? 'Ver vencedores' : 'Tentar novamente'}<span aria-hidden="true"> →</span></button></div>
+      <p class="result-footer">${exhausted ? 'Obrigado por participares na roleta.' : 'Prémios disponíveis: iPhone 16 e MacBook Pro.'}</p>
+    </div>`;
+    bg.querySelector('h3').textContent = won ? `Parabéns! Ganhaste um ${detail.name}!` : exhausted ? 'Terminaste os teus giros' : 'Não foi desta vez!';
+    bg.querySelector('.result-subtitle').textContent = won ? 'O teu prémio merece ser celebrado.' : exhausted ? 'As tuas 10 tentativas foram utilizadas.' : 'Este giro não teve prémio.';
+    bg.querySelector('.result-description').textContent = won ? detail.description : exhausted ? 'Obrigado por participares. Já utilizaste todas as tentativas disponíveis nesta roleta.' : `Restam ${remaining} ${remaining === 1 ? 'tentativa para continuar' : 'tentativas para continuares'} a jogar. Quando estiveres pronto, volta a girar a roleta.`;
+    if (won) {
+      bg.querySelector('.attempt-card').remove();
+      const img = bg.querySelector('img');
+      img.src = PRODUCT_ASSETS[entry.text]; img.alt = detail.name;
+      bg.querySelector('.prize-caption').textContent = detail.category;
+      for (const feature of detail.features) {
+        const chip = document.createElement('span'); chip.textContent = feature;
+        bg.querySelector('.product-features').appendChild(chip);
+      }
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const close = () => {
+      bg.remove(); document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKey);
+      if (exhausted) { $('attemptStatus').tabIndex = -1; $('attemptStatus').focus(); }
+      else $('spinBtn').focus();
+    };
+    const onKey = e => {
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      if (e.key === 'Tab') {
+        const buttons = [...bg.querySelectorAll('button')];
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    bg.addEventListener('click', e => {
+      if (won && e.target.closest('[data-a="receive"]')) { receivePrize(detail); return; }
+      if (e.target === bg || e.target.closest('[data-a="close"]')) close();
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(bg);
+    bg.querySelector('.primary').focus();
+  }
+
+  // ---------- confetti ----------
+  const cf = $('confetti'), cfx = cf.getContext('2d');
+  function confetti() {
+    cf.width = innerWidth; cf.height = innerHeight;
+    const cols = PALETTES.vivo.colors.concat(['#ffffff', '#ffd2ad']);
+    const parts = Array.from({ length: 160 }, () => ({
+      x: innerWidth / 2 + (rand() - .5) * 200, y: innerHeight * 0.45,
+      vx: (rand() - .5) * 16, vy: -rand() * 16 - 4, s: 6 + rand() * 6,
+      r: rand() * 6, vr: (rand() - .5) * .4, c: cols[Math.floor(rand() * cols.length)],
+    }));
+    const t0 = performance.now();
+    const step = now => {
+      cfx.clearRect(0, 0, cf.width, cf.height);
+      parts.forEach(p => {
+        p.vy += 0.38; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        cfx.save(); cfx.translate(p.x, p.y); cfx.rotate(p.r);
+        cfx.fillStyle = p.c; cfx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); cfx.restore();
+      });
+      if (now - t0 < 3200) requestAnimationFrame(step); else cfx.clearRect(0, 0, cf.width, cf.height);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ---------- UI rendering ----------
+  function syncFromModel() {
+    $('entriesText').value = serialize(state.entries);
+    renderAll();
+  }
+  function renderAll() {
+    const vis = visible().length;
+    const hid = state.entries.length - vis;
+    $('countBadge').textContent = `Fatias (${vis})` + (hid ? ` · ${hid} ocultas` : '');
+    renderList(); draw(); save();
+  }
+  function renderList() {
+    const list = $('list');
+    if ($('list').closest('.panel').hidden) return;
+    const colors = sliceColors(visible().length);
+    let vi = 0;
+    list.replaceChildren(...state.entries.map((e, i) => {
+      const row = document.createElement('div');
+      row.className = 'row' + (e.hidden ? ' off' : '');
+      row.innerHTML = `<span class="dot"></span><input type="text" aria-label="Nome" /><input type="number" min="0.1" step="0.5" aria-label="Peso" /><button title="${e.hidden ? 'Mostrar' : 'Ocultar'}">${e.hidden ? '🙈' : '👁'}</button><button title="Remover">✕</button>`;
+      row.querySelector('.dot').style.background = e.hidden ? 'transparent' : colors[vi++];
+      if (e.hidden) row.querySelector('.dot').style.border = '1px dashed var(--muted)';
+      const [name, weight] = row.querySelectorAll('input');
+      name.value = e.text; weight.value = e.weight;
+      name.addEventListener('change', () => { const v = name.value.trim(); if (v) e.text = v.slice(0, 200); else state.entries.splice(i, 1); syncFromModel(); });
+      weight.addEventListener('change', () => { e.weight = clampWeight(weight.value); syncFromModel(); });
+      const [hideB, delB] = row.querySelectorAll('button');
+      hideB.addEventListener('click', () => { e.hidden = !e.hidden; syncFromModel(); });
+      delB.addEventListener('click', () => { state.entries.splice(i, 1); syncFromModel(); });
+      return row;
+    }));
+    if (!state.entries.length) list.innerHTML = '<div class="empty">Sem nomes ainda.</div>';
+  }
+  const DEMO_WINNERS = [
+  {
+    "name": "António Kassoma",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/antonio.jpg",
+    "soft": false
+  },
+  {
+    "name": "Maria Miguel",
+    "product": "iPhone 16",
+    "photo": "assets/winners/beatriz.jpg",
+    "soft": false
+  },
+  {
+    "name": "Manuel Kapenda",
+    "product": "Motorizada",
+    "photo": "assets/winners/manuel.jpg",
+    "soft": false
+  },
+  {
+    "name": "Ana Salvador",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1757649734013-705dd6456c02.jpg",
+    "soft": true
+  },
+  {
+    "name": "José Domingos",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1776781205743-33b4c1106adc.jpg",
+    "soft": false
+  },
+  {
+    "name": "Beatriz Fernandes",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1613876215075-276fd62c89a4.jpg",
+    "soft": false
+  },
+  {
+    "name": "João Mateus",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1784651989032-b55410f21e52.jpg",
+    "soft": false
+  },
+  {
+    "name": "Isabel Costa",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1593351799227-75df2026356b.jpg",
+    "soft": false
+  },
+  {
+    "name": "Pedro António",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1693070503207-6ad6bf8b9a00.jpg",
+    "soft": true
+  },
+  {
+    "name": "Teresa Silva",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1505421031134-e57263cae630.jpg",
+    "soft": false
+  },
+  {
+    "name": "Francisco João",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1784988633908-8b5ae30c4c74.jpg",
+    "soft": false
+  },
+  {
+    "name": "Joana Santos",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1620424037570-15137a4a562d.jpg",
+    "soft": false
+  },
+  {
+    "name": "Domingos Afonso",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1560787313-5dff3307e257.jpg",
+    "soft": false
+  },
+  {
+    "name": "Francisca Ferreira",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1743871698163-a2e470d8eac7.jpg",
+    "soft": true
+  },
+  {
+    "name": "Joaquim Francisco",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1518809595274-1471d16319b7.jpg",
+    "soft": false
+  },
+  {
+    "name": "Domingas Lopes",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1532076904124-d4e8fe7fbbec.jpg",
+    "soft": false
+  },
+  {
+    "name": "Paulo Agostinho",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1596580817363-a4a8f67d4bc8.jpg",
+    "soft": false
+  },
+  {
+    "name": "Paula Mendes",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1662850886700-4ec19bd30d11.jpg",
+    "soft": false
+  },
+  {
+    "name": "Carlos Baptista",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1565148343401-5e4aa8f9c2cf.jpg",
+    "soft": true
+  },
+  {
+    "name": "Carla Neto",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1636302926027-9619142d7173.jpg",
+    "soft": false
+  },
+  {
+    "name": "Miguel Pedro",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1612720572242-fefde96650f6.jpg",
+    "soft": false
+  },
+  {
+    "name": "Madalena Gonçalves",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1586233828056-5d4c18bcf9d0.jpg",
+    "soft": false
+  },
+  {
+    "name": "André José",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1714118657863-2843a622718b.jpg",
+    "soft": false
+  },
+  {
+    "name": "Marta Gomes",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1628682814595-a3f0816b25ff.jpg",
+    "soft": true
+  },
+  {
+    "name": "Fernando Eduardo",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1657356217561-6ed26b47e116.jpg",
+    "soft": false
+  },
+  {
+    "name": "Helena Almeida",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1628682819415-afbd0eb5f93a.jpg",
+    "soft": false
+  },
+  {
+    "name": "Alberto Joaquim",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1625647018107-1322c87364d4.jpg",
+    "soft": false
+  },
+  {
+    "name": "Filomena Andrade",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1780387477222-730504564368.jpg",
+    "soft": false
+  },
+  {
+    "name": "Adão Bernardo",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1665006852027-5243f26e78b6.jpg",
+    "soft": true
+  },
+  {
+    "name": "Antónia Barros",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1523297736436-356615162cc8.jpg",
+    "soft": false
+  },
+  {
+    "name": "Afonso David",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1596529257881-85dfcdc8f880.jpg",
+    "soft": false
+  },
+  {
+    "name": "Josefa Carvalho",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1604247203891-ae01b7b2f1bb.jpg",
+    "soft": false
+  },
+  {
+    "name": "Agostinho Lourenço",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1614807536394-cd67bd4a634b.jpg",
+    "soft": false
+  },
+  {
+    "name": "Albertina Correia",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1613730317928-246094cb6a82.jpg",
+    "soft": true
+  },
+  {
+    "name": "Amílcar Miguel",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1531558297330-791932f4f398.jpg",
+    "soft": false
+  },
+  {
+    "name": "Adelina Cruz",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1613730317814-1cede28e0151.jpg",
+    "soft": false
+  },
+  {
+    "name": "Armando Salvador",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1562173650-f61426fbe683.jpg",
+    "soft": false
+  },
+  {
+    "name": "Amélia Dias",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1627634429638-62e45e6498e7.jpg",
+    "soft": false
+  },
+  {
+    "name": "Artur Fernandes",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1440451185281-11ff5853ce0a.jpg",
+    "soft": true
+  },
+  {
+    "name": "Augusta Figueiredo",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1627634432023-95713e2ff3f0.jpg",
+    "soft": false
+  },
+  {
+    "name": "Baltasar Costa",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1542276677-0aab41a6190f.jpg",
+    "soft": false
+  },
+  {
+    "name": "Aurora Fonseca",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1627634433239-3bd21dee35c0.jpg",
+    "soft": false
+  },
+  {
+    "name": "Bartolomeu Silva",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1688120320082-f23f0c1425be.jpg",
+    "soft": false
+  },
+  {
+    "name": "Benedita Freitas",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1597450766109-d8d60d1fc044.jpg",
+    "soft": true
+  },
+  {
+    "name": "Benjamim Santos",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1618051438543-9f85cab01c60.jpg",
+    "soft": false
+  },
+  {
+    "name": "Bernardina Garcia",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1586171984069-1dbce3573a10.jpg",
+    "soft": false
+  },
+  {
+    "name": "Bento Ferreira",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1723221906960-1c5a5febc9c3.jpg",
+    "soft": false
+  },
+  {
+    "name": "Catarina Henriques",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1596959997582-78c0ce90c720.jpg",
+    "soft": false
+  },
+  {
+    "name": "Bernardo Lopes",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1598547461182-45d03f6661e4.jpg",
+    "soft": true
+  },
+  {
+    "name": "Cecília Lemos",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1756588534346-e8899364757b.jpg",
+    "soft": false
+  },
+  {
+    "name": "Caetano Mendes",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1551692702-edf4a1d740bf.jpg",
+    "soft": false
+  },
+  {
+    "name": "Celeste Macedo",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1605740179653-9cc6fd743e04.jpg",
+    "soft": false
+  },
+  {
+    "name": "Celestino Neto",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1670930775415-8c4c5bd0add1.jpg",
+    "soft": false
+  },
+  {
+    "name": "Cláudia Machado",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1613876214855-407ce0d838fb.jpg",
+    "soft": true
+  },
+  {
+    "name": "Cipriano Gonçalves",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1574487086609-ae8c9be52e44.jpg",
+    "soft": false
+  },
+  {
+    "name": "Conceição Miranda",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1644152993066-9b9ee687930d.jpg",
+    "soft": false
+  },
+  {
+    "name": "Cláudio Gomes",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1688143029511-b37423aa60a2.jpg",
+    "soft": false
+  },
+  {
+    "name": "Cristina Morais",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1619694770795-e21c58464159.jpg",
+    "soft": false
+  },
+  {
+    "name": "Daniel Almeida",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1723221907187-3e88c1d74b99.jpg",
+    "soft": true
+  },
+  {
+    "name": "Daniela Nascimento",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1590670796065-5c2469672e18.jpg",
+    "soft": false
+  },
+  {
+    "name": "David Andrade",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1668752515680-075bf648d8fa.jpg",
+    "soft": false
+  },
+  {
+    "name": "Deolinda Pereira",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1527201987695-67c06571957e.jpg",
+    "soft": false
+  },
+  {
+    "name": "Eduardo Barros",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1520451644838-906a72aa7c86.jpg",
+    "soft": false
+  },
+  {
+    "name": "Dulce Ribeiro",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1652732115150-5799f3db2e42.jpg",
+    "soft": true
+  },
+  {
+    "name": "Elias Carvalho",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1711464669343-2596d0f1b526.jpg",
+    "soft": false
+  },
+  {
+    "name": "Edite Rodrigues",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1522938974444-f12497b69347.jpg",
+    "soft": false
+  },
+  {
+    "name": "Emílio Correia",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1603076174779-8565218280c0.jpg",
+    "soft": false
+  },
+  {
+    "name": "Elisa Simões",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1680109878442-4e354d29f83a.jpg",
+    "soft": false
+  },
+  {
+    "name": "Ernesto Cruz",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1715430031409-4521893981b1.jpg",
+    "soft": true
+  },
+  {
+    "name": "Emília Soares",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1588578929512-82de8ae1e8df.jpg",
+    "soft": false
+  },
+  {
+    "name": "Estêvão Dias",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1745895259267-8ae241079533.jpg",
+    "soft": false
+  },
+  {
+    "name": "Esperança Tavares",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1673447067622-bbc8a34e2c56.jpg",
+    "soft": false
+  },
+  {
+    "name": "Eugénio Figueiredo",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1654027879796-b9dee8caabb6.jpg",
+    "soft": false
+  },
+  {
+    "name": "Eugénia Teixeira",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1729727897698-49aa9de604a0.jpg",
+    "soft": true
+  },
+  {
+    "name": "Eusébio Fonseca",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1658909835296-37c27121b52c.jpg",
+    "soft": false
+  },
+  {
+    "name": "Eunice Vieira",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1729727897672-2969ade16771.jpg",
+    "soft": false
+  },
+  {
+    "name": "Faustino Freitas",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1679066007545-8f1d9ef3aa90.jpg",
+    "soft": false
+  },
+  {
+    "name": "Eva Cassoma",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1587751544229-1a13176e5d63.jpg",
+    "soft": false
+  },
+  {
+    "name": "Feliciano Garcia",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1727097274179-ca945a7bde9d.jpg",
+    "soft": true
+  },
+  {
+    "name": "Fátima Chissanga",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1577128634172-2bd2c1d7915f.jpg",
+    "soft": false
+  },
+  {
+    "name": "Filipe Henriques",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1512372923090-7b14fb496d44.jpg",
+    "soft": false
+  },
+  {
+    "name": "Fernanda Kapenda",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1577128634316-64c3bb923763.jpg",
+    "soft": false
+  },
+  {
+    "name": "Frederico Lemos",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1533056344954-8acef6d63650.jpg",
+    "soft": false
+  },
+  {
+    "name": "Flora Kiala",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1728927585694-434c6ef30aae.jpg",
+    "soft": true
+  },
+  {
+    "name": "Gabriel Macedo",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1676879419067-ef6f3b4aab3a.jpg",
+    "soft": false
+  },
+  {
+    "name": "Gabriela Mbala",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1645092708550-2632c574bbfd.jpg",
+    "soft": false
+  },
+  {
+    "name": "Gaspar Machado",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1767392060677-bb61631f538d.jpg",
+    "soft": false
+  },
+  {
+    "name": "Graça Kassoma",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1507152832244-10d45c7eda57.jpg",
+    "soft": false
+  },
+  {
+    "name": "Geraldo Miranda",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1570158268183-d296b2892211.jpg",
+    "soft": true
+  },
+  {
+    "name": "Inês Manuel",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1610722839611-f7837e1dd39f.jpg",
+    "soft": false
+  },
+  {
+    "name": "Gilberto Morais",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1565884280295-98eb83e41c65.jpg",
+    "soft": false
+  },
+  {
+    "name": "Irene Domingos",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1511935039706-c2b225e45a44.jpg",
+    "soft": false
+  },
+  {
+    "name": "Hélder Nascimento",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1587064712555-6e206484699b.jpg",
+    "soft": false
+  },
+  {
+    "name": "Jacinta Mateus",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1698226525336-dd3fb199c725.jpg",
+    "soft": true
+  },
+  {
+    "name": "Henrique Pereira",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1784651988968-8e66442d058c.jpg",
+    "soft": false
+  },
+  {
+    "name": "Joaquina António",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1777670867722-b3aea4bba1f3.jpg",
+    "soft": false
+  },
+  {
+    "name": "Inácio Ribeiro",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1518882570151-157128e78fa1.jpg",
+    "soft": false
+  },
+  {
+    "name": "Júlia João",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1547150928-68b26ea43077.jpg",
+    "soft": false
+  },
+  {
+    "name": "Isaías Rodrigues",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1783715209395-33682fcebb19.jpg",
+    "soft": true
+  },
+  {
+    "name": "Laurinda Afonso",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1556300219-2d2fdd6266d3.jpg",
+    "soft": false
+  },
+  {
+    "name": "Jacinto Simões",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1605980776566-0486c3ac7617.jpg",
+    "soft": false
+  },
+  {
+    "name": "Leonor Francisco",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1632765854612-9b02b6ec2b15.jpg",
+    "soft": false
+  },
+  {
+    "name": "Jeremias Soares",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1654155427842-a4a249bf693e.jpg",
+    "soft": false
+  },
+  {
+    "name": "Lídia Agostinho",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1767884022291-3c4f75cd7833.jpg",
+    "soft": true
+  },
+  {
+    "name": "Joel Tavares",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1531901599143-df5010ab9438.jpg",
+    "soft": false
+  },
+  {
+    "name": "Lúcia Baptista",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1589156191108-c762ff4b96ab.jpg",
+    "soft": false
+  },
+  {
+    "name": "Jorge Teixeira",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1584119164246-461d43e9bab3.jpg",
+    "soft": false
+  },
+  {
+    "name": "Luísa Pedro",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1589156280159-27698a70f29e.jpg",
+    "soft": false
+  },
+  {
+    "name": "Júlio Vieira",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1614023342667-6f060e9d1e04.jpg",
+    "soft": true
+  },
+  {
+    "name": "Marcelina José",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1762810543525-189cc724409f.jpg",
+    "soft": false
+  },
+  {
+    "name": "Leonardo Cassoma",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1621624666561-84d0107001dc.jpg",
+    "soft": false
+  },
+  {
+    "name": "Mariana Eduardo",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1523824921871-d6f1a15151f1.jpg",
+    "soft": false
+  },
+  {
+    "name": "Lourenço Chissanga",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1625181796571-7f0d4571ab12.jpg",
+    "soft": false
+  },
+  {
+    "name": "Natália Joaquim",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1760320483882-9aaa762c0726.jpg",
+    "soft": true
+  },
+  {
+    "name": "Lucas Kapenda",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1676151216170-e1c7558c62ca.jpg",
+    "soft": false
+  },
+  {
+    "name": "Rosa Bernardo",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1770419252442-1485fd76cdb2.jpg",
+    "soft": false
+  },
+  {
+    "name": "Mateus Kiala",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1614890094520-7b8dd0ec56d2.jpg",
+    "soft": false
+  },
+  {
+    "name": "Rosalina David",
+    "product": "MacBook Pro",
+    "photo": "assets/winners/african-portraits/photo-1527203561188-dae1bc1a417f.jpg",
+    "soft": false
+  },
+  {
+    "name": "Salvador Mbala",
+    "product": "iPhone 16",
+    "photo": "assets/winners/african-portraits/photo-1583123810408-23e7b5d1af9f.jpg",
+    "soft": true
+  },
+  {
+    "name": "Vitória Lourenço",
+    "product": "Motorizada",
+    "photo": "assets/winners/african-portraits/photo-1512361436605-a484bdb34b5f.jpg",
+    "soft": false
+  }
+];
+  const FEED_PROGRESS_KEY = 'roleta-demo-feed-progress-v2';
+  let feedIndex = 0;
+  let feedHistory = [];
+  try {
+    const stored = JSON.parse(localStorage.getItem(FEED_PROGRESS_KEY));
+    if (stored && Number.isInteger(stored.cursor) && stored.cursor >= 0 && stored.cursor <= DEMO_WINNERS.length) {
+      feedIndex = stored.cursor;
+      const seen = new Set();
+      feedHistory = (Array.isArray(stored.history) ? stored.history : []).filter(row => {
+        if (!row || !Number.isInteger(row.index) || row.index < 0 || row.index >= feedIndex || !Number.isFinite(row.at) || seen.has(row.index)) return false;
+        seen.add(row.index); return true;
+      }).slice(-20);
+    }
+  } catch {}
+  const FEED_COMMENTS = [
+    product => `Nunca pensei na minha vida que ia ter ${product}. Ainda estou sem palavras! 😭💜`,
+    product => `Olhei para o resultado várias vezes… ganhei ${product}! O meu coração está a mil! 🥹`,
+    product => `Sempre sonhei com ${product}. Hoje só consigo sorrir e agradecer! 🙏✨`,
+    product => `As minhas mãos estão a tremer de alegria… ${product}! Nem sei o que dizer! 😭`,
+    product => `Chamei a minha família para ver o ecrã comigo. Ganhei ${product}! Que emoção! ❤️`,
+    product => `Quem me dera conseguir explicar o que estou a sentir… ${product}! É muita felicidade! 🥹✨`,
+    product => `Por um momento fiquei sem reação. Depois veio o sorriso: ganhei ${product}! 😭🙌`,
+    product => `Nunca imaginei escrever isto: ganhei ${product}! Vou guardar este momento no coração. 💜`,
+    product => `Hoje tenho uma história para contar com um sorriso enorme: ganhei ${product}! 🥳`,
+    product => `Estou a rir e a chorar ao mesmo tempo. ${product}! Que momento tão especial! 😭❤️`,
+    product => `Fiquei a olhar para o ecrã, sem acreditar no que estava a ler… ${product}! 🥹`,
+    product => `Já imaginava como seria ter ${product}. Agora faltam-me as palavras! ✨💜`,
+    product => `Ganhei ${product}! Disse isto em voz alta e comecei logo a sorrir outra vez! 😭🎉`,
+    product => `Não consigo parar de sorrir. ${product}! Hoje a alegria não cabe no peito. ❤️`,
+    product => `Queria ter gravado a minha reação quando vi ${product} no resultado! Foi só emoção! 🥹🙌`,
+    product => `Ganhei ${product}! Há momentos tão bons que a gente fica sem saber o que dizer. 💛`,
+    product => `O meu primeiro impulso foi chamar a minha mãe: ganhei ${product}! Que alegria partilhar isto! ❤️`,
+    product => `Nem as palavras chegam para explicar esta felicidade. Ganhei ${product}! 😭✨`,
+    product => `Vou lembrar-me deste sorriso durante muito tempo. Ganhei ${product}! 💜🎉`,
+    product => `De repente, só me apetecia abraçar toda a gente. Ganhei ${product}! 🥹❤️`,
+    product => `Nunca imaginei ficar com o coração assim por causa de uma roleta… ${product}! 😭`,
+    product => `Ganhei ${product}! Hoje tenho um motivo enorme para celebrar com a minha família. 🙌💜`,
+    product => `Já li o resultado outra vez e continuo com o mesmo sorriso: ${product}! 🥹✨`,
+    product => `Como é que se explica uma alegria destas? Ganhei ${product}! Estou sem palavras! 😭🎊`,
+    product => `Parei tudo para olhar para o ecrã. ${product}! Que surpresa tão bonita! ❤️✨`,
+    product => `Ganhei ${product}! O grito de alegria saiu antes de eu conseguir dizer mais alguma coisa! 🥳`,
+    product => `Nem sei por onde começar… ${product}! Este momento vai ficar na minha memória. 🥹💜`,
+    product => `Hoje vou contar esta história vezes sem conta: ganhei ${product}! 😭🙌`,
+    product => `Ganhei ${product}! Estou com aquele sorriso que não dá para esconder. 💛✨`,
+    product => `Por dentro é uma festa! ${product}! Ainda estou a tentar encontrar as palavras. 🎉🥹`,
+    product => `Que emoção ver ${product} no meu resultado! Estou a viver este momento com o coração cheio. 💜`,
+    product => `Ganhei ${product}! Há surpresas que deixam a gente em silêncio… e depois em lágrimas de alegria. 😭❤️`,
+  ];
+  let winnersPaused = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function createFeedRow(winner, index, at, animate) {
+    const product = winner.product === 'Motorizada' ? 'uma motorizada' : `um ${winner.product}`;
+    const message = FEED_COMMENTS[index % FEED_COMMENTS.length](product);
+    const li = document.createElement('li');
+    li.className = `winner-row${animate ? ' is-new' : ''}`;
+    li.innerHTML = `<div class="winner-avatar"><img width="44" height="44" alt="" /></div>
+      <div class="winner-copy"><div class="feed-message-head"><strong></strong><time></time></div>
+      <p class="feed-message-text"></p><span class="feed-prize"></span></div>
+      <div class="winner-product"><img width="44" height="44" alt="" /></div>`;
+    const photo = li.querySelector('.winner-avatar img');
+    photo.src = winner.photo;
+    if (winner.soft) photo.classList.add('soft-portrait');
+    photo.onerror = () => { photo.hidden = true; photo.parentElement.dataset.initial = winner.name.charAt(0); };
+    li.querySelector('.winner-copy strong').textContent = winner.name;
+    li.querySelector('.feed-message-text').textContent = message;
+    li.querySelector('.feed-prize').textContent = `${winner.name} ganhou ${winner.product}`;
+    li.querySelector('.winner-product img').src = PRODUCT_ASSETS[winner.product];
+    const time = li.querySelector('time');
+    time.dateTime = new Date(at).toISOString();
+    time.textContent = 'Agora';
+    time.title = 'Hora de apresentação desta mensagem simulada';
+    li.dataset.profileIndex = index;
+    return li;
+  }
+  function appendFeedMessage(animate = true) {
+    if (feedIndex >= DEMO_WINNERS.length) { updateFeedControl(); return false; }
+    const index = feedIndex++;
+    const at = Date.now();
+    const li = createFeedRow(DEMO_WINNERS[index], index, at, animate);
+    feedHistory.push({ index, at });
+    feedHistory = feedHistory.slice(-20);
+    try { localStorage.setItem(FEED_PROGRESS_KEY, JSON.stringify({ cursor: feedIndex, history: feedHistory })); } catch {}
+    $('results').prepend(li);
+    while ($('results').children.length > 20) $('results').lastElementChild.remove();
+    $('resBadge').textContent = $('results').children.length;
+    if (animate) setTimeout(() => li.classList.remove('is-new'), 450);
+    if (feedIndex >= DEMO_WINNERS.length) updateFeedControl();
+    return true;
+  }
+  function renderResults() {
+    // Spin results stay in state; the simulated chat has its own entries.
+    if ($('results').children.length) return;
+    if (feedIndex === 0) {
+      for (let i = 0; i < 3; i++) appendFeedMessage(false);
+    } else {
+      for (const row of feedHistory) $('results').prepend(createFeedRow(DEMO_WINNERS[row.index], row.index, row.at, false));
+      $('resBadge').textContent = $('results').children.length;
+    }
+  }
+  function updateFeedControl() {
+    const finished = feedIndex >= DEMO_WINNERS.length;
+    $('toggleWinners').disabled = finished;
+    $('toggleWinners').setAttribute('aria-pressed', String(winnersPaused));
+    $('toggleWinners').textContent = finished ? 'Concluído' : winnersPaused ? 'Retomar' : 'Pausar';
+    $('feedStatus').textContent = finished ? 'Todos os perfis foram apresentados' : winnersPaused ? 'Mensagens em pausa' : 'A receber mensagens';
+    $('toggleWinners').closest('.winners-bottom').classList.toggle('feed-paused', winnersPaused || finished);
+  }
+  updateFeedControl();
+  $('toggleWinners').addEventListener('click', () => {
+    winnersPaused = !winnersPaused;
+    updateFeedControl();
+  });
+  function scheduleFeedMessage() {
+    if (feedIndex >= DEMO_WINNERS.length) return;
+    const delays = [8000, 12000, 20000, 30000, 45000, 60000];
+    const delay = delays[Math.floor(rand() * delays.length)];
+    setTimeout(() => {
+      if (!winnersPaused && !document.hidden && $('results').scrollTop <= 12 && !document.querySelector('.modal-bg, .participation-dialog[open]')) {
+        appendFeedMessage();
+      }
+      scheduleFeedMessage();
+    }, delay);
+  }
+  scheduleFeedMessage();
+  setInterval(() => {
+    if (document.hidden) return;
+    $('results').querySelectorAll('time').forEach(time => {
+      const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(time.dateTime)) / 1000));
+      time.textContent = seconds < 5 ? 'Agora' : seconds < 60 ? `há ${seconds}s` : seconds < 3600 ? `há ${Math.floor(seconds / 60)} min` : `há ${Math.floor(seconds / 3600)} h`;
+    });
+  }, 1000);
+  function renderPalettes() {
+    $('palettes').replaceChildren(...Object.entries(PALETTES).map(([key, p]) => {
+      const b = document.createElement('button');
+      b.className = 'pal'; b.setAttribute('aria-pressed', key === state.opts.palette);
+      b.innerHTML = `<span></span><div class="sw">${p.colors.map(c => `<span style="background:${c}"></span>`).join('')}</div>`;
+      b.firstChild.textContent = p.name;
+      b.addEventListener('click', () => { state.opts.palette = key; renderPalettes(); renderAll(); });
+      return b;
+    }));
+  }
+  let toastTimer;
+  function toast(msg) {
+    document.querySelector('.toast')?.remove();
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 2400);
+  }
+  function download(name, text) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  async function copy(text, msg) {
+    try { await navigator.clipboard.writeText(text); toast(msg); }
+    catch { prompt('Copia manualmente:', text); }
+  }
+
+  // ---------- events ----------
+  $('spinBtn').addEventListener('click', spin);
+  $('hubBtn').addEventListener('click', spin);
+  canvas.addEventListener('click', spin);
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space' || document.querySelector('.modal-bg')) return;
+    if (e.target.closest('input, textarea, select, button')) return;
+    e.preventDefault(); spin();
+  });
+
+  $('entriesText').addEventListener('input', e => {
+    state.entries = parseText(e.target.value);
+    if (e.target.value.split(/\n/).filter(l => l.trim()).length > MAX_SLICES) toast(`Limite de ${MAX_SLICES} fatias.`);
+    renderAll();
+  });
+  $('wheelTitle').addEventListener('input', e => { state.title = e.target.value; document.title = e.target.value || 'Roleta de Nomes'; save(); });
+
+  document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t === tab));
+    document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== tab.dataset.tab);
+    if (tab.dataset.tab === 'list') renderList();
+  }));
+
+  $('shuffleBtn').addEventListener('click', () => {
+    const a = state.entries;
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    syncFromModel();
+  });
+  $('sortBtn').addEventListener('click', () => { state.entries.sort((a, b) => a.text.localeCompare(b.text, 'pt', { sensitivity: 'base' })); syncFromModel(); });
+  $('clearBtn').addEventListener('click', () => { if (state.entries.length && confirm('Remover todos os nomes?')) { state.entries = []; syncFromModel(); } });
+  $('showAllBtn').addEventListener('click', () => { state.entries.forEach(e => e.hidden = false); syncFromModel(); });
+  $('resetWeightsBtn').addEventListener('click', () => { state.entries.forEach(e => e.weight = 1); syncFromModel(); });
+  $('addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('addInput').value.trim();
+    if (!v) return;
+    if (state.entries.length >= MAX_SLICES) { toast(`Limite de ${MAX_SLICES} fatias.`); return; }
+    state.entries.push({ text: v.slice(0, 200), weight: 1, hidden: false });
+    $('addInput').value = ''; syncFromModel(); $('addInput').focus();
+  });
+
+  $('importBtn').addEventListener('click', () => $('fileInput').click());
+  $('fileInput').addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (f.size > MAX_FILE) { toast('Ficheiro demasiado grande (máx. 300 KB).'); return; }
+    const lines = (await f.text()).split(/\r?\n/).map(line => {
+      const cells = line.split(/\t|;|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, '').trim()).filter(Boolean);
+      if (cells.length >= 2 && /^\d+(\.\d+)?$/.test(cells[0])) return `${cells[0]}, ${cells[1]}`;
+      return cells[0] || '';
+    }).filter(Boolean);
+    const room = MAX_SLICES - state.entries.length;
+    state.entries.push(...parseText(lines.slice(0, room).join('\n')));
+    syncFromModel();
+    toast(`${Math.min(lines.length, room)} nomes importados.`);
+  });
+
+  $('copyResBtn').addEventListener('click', () => copy(state.results.map(r => r.text).join('\n'), 'Resultados copiados.'));
+  $('clearResBtn').addEventListener('click', () => { state.results = []; renderResults(); save(); });
+
+  $('shareBtn').addEventListener('click', () => copy(location.href.split('#')[0] + '#w=' + encodeState(), 'Link copiado.'));
+  $('exportBtn').addEventListener('click', () => download((state.title || 'roleta').replace(/[^\w\- ]+/g, '').trim() + '.json', JSON.stringify(state, null, 2)));
+  $('importJsonBtn').addEventListener('click', () => $('jsonInput').click());
+  $('jsonInput').addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try { state = normalize(JSON.parse(await f.text())); initUI(); toast('Roleta importada.'); }
+    catch { toast('JSON inválido.'); }
+  });
+
+  const bindOpt = (id, key, prop, after) => {
+    const el = $(id);
+    el.addEventListener('input', () => { state.opts[key] = prop === 'checked' ? el.checked : Number(el.value); after?.(); draw(); save(); });
+  };
+
+  $('themeBtn').addEventListener('click', () => {
+    const root = document.documentElement;
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('roleta-theme', root.dataset.theme); } catch {}
+    draw();
+  });
+  try { const t = localStorage.getItem('roleta-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  $('fullBtn').addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else $('wheelWrap').closest('.stage').requestFullscreen?.();
+  });
+
+  const durLabel = () => $('durLabel').textContent = `${state.opts.duration} segundos`;
+  const OPTS = [['optPercent', 'percent', 'checked'], ['optBorder', 'border', 'checked'], ['optFont', 'font', 'value'],
+    ['optTick', 'tick', 'checked'], ['optWinSound', 'winSound', 'checked'], ['optVolume', 'volume', 'value'],
+    ['optConfetti', 'confetti', 'checked'], ['optDuration', 'duration', 'value', durLabel], ['optElim', 'elim', 'checked'],
+    ['optPopup', 'popup', 'checked']];
+  OPTS.forEach(([id, key, prop, after]) => bindOpt(id, key, prop, after));
+
+  // refreshes every control from state (startup and after a JSON import)
+  function initUI() {
+    $('wheelTitle').value = state.title;
+    document.title = state.title || 'Roleta de Nomes';
+    OPTS.forEach(([id, key, prop]) => $(id)[prop] = state.opts[key]);
+    durLabel(); renderPalettes(); renderResults(); syncFromModel();
+  }
+
+  new ResizeObserver(resize).observe(canvas);
+  initUI();
+  setSpinning(false);
+  window.openParticipationGate({ remaining: TOTAL_SPINS - attempts, onReady: () => {
+    participantReady = true;
+    if ($('spinBtn').disabled) { $('attemptStatus').tabIndex = -1; $('attemptStatus').focus(); }
+    else $('spinBtn').focus();
+  } });
+})();
+</script>
+</body>
+</html>
