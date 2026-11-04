@@ -1,0 +1,28 @@
+.participation-dialog { width: min(460px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 24px 28px 26px; border: 1px solid var(--line); border-top: 4px solid var(--brand-orange); border-radius: 24px; background: linear-gradient(150deg, var(--accent-soft), var(--panel) 36%); color: var(--ink); box-shadow: 0 24px 90px #30113f60; text-align: center; }
+.participation-dialog::backdrop { background: #210d2da6; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.participation-brand { display: flex; justify-content: center; }
+.participation-brand img { display: block; width: 180px; height: auto; background: #fff; border-radius: 10px; padding: 5px 9px; }
+.participation-eyebrow { margin: 16px 0 14px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .15em; color: var(--accent); }
+.participation-dialog h2 { font-size: clamp(26px, 6vw, 34px); line-height: 1.1; letter-spacing: -.04em; margin: 14px 0 12px; }
+.participation-symbol { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; margin: 0 auto; font-size: 30px; background: #fff0e2; color: #a53b0e; }
+.participation-copy { margin: 0 0 20px; font-size: 13px; color: var(--muted); line-height: 1.75; }
+.participation-dialog form { text-align: left; }
+.participation-dialog label { font-weight: 700; font-size: 12px; display: block; margin-bottom: 8px; }
+.participation-dialog input { display: block; width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; background: var(--panel); color: var(--ink); font-size: 16px; }
+.participation-dialog input::placeholder { color: var(--muted); font-size: 13px; }
+.participation-dialog input:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.participation-dialog input[aria-invalid="true"] { border-color: var(--danger); }
+.participation-error { min-height: 0; font-size: 11px; line-height: 1.5; color: var(--danger); margin: 6px 0 14px; }
+.participation-error:empty { margin-top: 0; }
+.participation-hint { color: var(--muted); font-size: 10px; line-height: 1.5; margin: -6px 0 18px; }
+.participation-button { width: 100%; padding: 14px 15px; font-size: 14px; border-radius: 12px; }
+.participation-privacy { margin: 16px 0 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+.participation-spinner { width: 52px; height: 52px; border: 4px solid var(--line); border-top-color: var(--brand-orange); border-right-color: var(--brand-purple); border-radius: 50%; margin: 34px auto 24px; animation: participation-spin .85s linear infinite; }
+.participation-checks { display: grid; gap: 10px; margin: 22px 0; padding: 18px; text-align: left; border: 1px solid var(--line); border-radius: 14px; color: var(--accent); font-size: 12px; background: var(--panel); }
+.participation-success-icon { background: var(--brand-purple); color: #fff; margin-top: 22px; }
+.participation-allowance { margin: 20px 0; padding: 16px; border: 1px solid var(--line); background: var(--panel); border-radius: 16px; display: flex; flex-direction: column; gap: 5px; }
+.participation-allowance strong { color: var(--accent); font-size: 26px; letter-spacing: -.04em; }
+.participation-allowance span { font-size: 12px; color: var(--muted); }
+@keyframes participation-spin { to { transform: rotate(360deg); } }
+@media (max-width: 360px) { .participation-dialog { padding: 20px 18px; } }
+@media (prefers-reduced-motion: reduce) { .participation-spinner { animation: none; } }
